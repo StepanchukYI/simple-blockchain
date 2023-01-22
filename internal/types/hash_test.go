@@ -8,16 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRandomHash(t *testing.T) {
-	hash, err := RandomHash()
-	if err != nil {
-		t.Error(err)
-	}
-
-	assert.Equal(t, len(hash), hashLen)
-}
-
-func TestHashFromBytes(t *testing.T) {
+func TestHashFromBytesError(t *testing.T) {
 	b := make([]byte, 20)
 
 	_, err := io.ReadFull(rand.Reader, b)
@@ -26,6 +17,19 @@ func TestHashFromBytes(t *testing.T) {
 	}
 
 	h, err := HashFromBytes(b)
-	assert.True(t, h.IsZero())
 	assert.Error(t, err, "byte len must be equal 32")
+	assert.True(t, h.IsZero())
+}
+
+func TestHashFromBytes(t *testing.T) {
+	b := make([]byte, HashLen)
+
+	_, err := io.ReadFull(rand.Reader, b)
+	if err != nil {
+		t.Error(err)
+	}
+
+	h, err := HashFromBytes(b)
+	assert.Equal(t, len(h.Bytes()), HashLen)
+	assert.Equal(t, len(h.ToSlice()), HashLen)
 }

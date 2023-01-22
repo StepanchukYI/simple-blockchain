@@ -3,6 +3,7 @@ package edwards
 import (
 	"testing"
 
+	"github.com/StepanchukYI/simple-blockchain/internal/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,7 +14,7 @@ func TestGeneratePrivateKey(t *testing.T) {
 	}
 	assert.Equal(t, len(privateKey.Bytes()), privateKeyLen)
 
-	publicKey := privateKey.Public()
+	publicKey := privateKey.PublicKey()
 	assert.Equal(t, len(publicKey.Bytes()), publicKeyLen)
 }
 
@@ -26,7 +27,7 @@ func TestGeneratePrivateKeyFromString(t *testing.T) {
 	}
 
 	assert.Equal(t, len(privateKey.Bytes()), privateKeyLen)
-	address := privateKey.Public().Address()
+	address := privateKey.PublicKey().Address()
 	assert.Equal(t, address.String(), addressStr)
 }
 
@@ -35,7 +36,7 @@ func TestPrivateKey_Sign(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	publicKey := privateKey.Public()
+	publicKey := privateKey.PublicKey()
 	msg := []byte("message to sign")
 	if err != nil {
 		t.Error(err)
@@ -53,7 +54,7 @@ func TestPrivateKey_Sign(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	pbKey := pvKey.Public()
+	pbKey := pvKey.PublicKey()
 	assert.False(t, signed.Verify(pbKey, msg))
 	assert.False(t, signed.Verify(pbKey, []byte("not same message to sign")))
 }
@@ -63,8 +64,8 @@ func TestPublicKey_Address(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	publicKey := privateKey.Public()
+	publicKey := privateKey.PublicKey()
 	address := publicKey.Address()
-	assert.Equal(t, addressLen, len(address.Bytes()))
+	assert.Equal(t, types.AddressLen, len(address.Bytes()))
 
 }

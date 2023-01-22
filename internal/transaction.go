@@ -1,26 +1,31 @@
 package internal
 
 import (
-	"encoding/binary"
-	"io"
+	"github.com/StepanchukYI/simple-blockchain/pkg/keypair/edwards"
 )
 
 type Transaction struct {
 	Data []byte
+
+	PublicKey edwards.PublicKey
+	Signature *edwards.Signature
 }
 
-func (tx *Transaction) EncodeBinary(w io.Writer) error {
-	if err := binary.Write(w, binary.LittleEndian, &tx.Data); err != nil {
+func (tx *Transaction) Sign(privKey edwards.PrivateKey) error {
+	sig, err := privKey.Sign(tx.Data)
+	if err != nil {
 		return err
 	}
+
+	tx.PublicKey = privKey.PublicKey()
+	tx.Signature = sig
 
 	return nil
 }
 
-func (tx *Transaction) DecodeBinary(r io.Reader) error {
-	if err := binary.Read(r, binary.LittleEndian, &tx.Data); err != nil {
-		return err
+func (tx *Transaction) Verify() bool {
+	if tx.Signature == nil {
+		return false
 	}
-
-	return nil
+	return tx.Signature.Verify(tx.PublicKey, tx.Data)
 }

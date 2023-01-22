@@ -14,7 +14,6 @@ const (
 	privateKeyLen = 64
 	publicKeyLen  = 32
 	seedLen       = 32
-	addressLen    = 20
 )
 
 type PrivateKey struct {
@@ -61,17 +60,17 @@ func GeneratePrivateKey() (PrivateKey, error) {
 	}, nil
 }
 
-func (pv *PrivateKey) Bytes() []byte {
+func (pv PrivateKey) Bytes() []byte {
 	return pv.key
 }
 
-func (pv *PrivateKey) Sign(data []byte) (*Signature, error) {
+func (pv PrivateKey) Sign(data []byte) (*Signature, error) {
 	return &Signature{
 		value: ed25519.Sign(pv.key, data),
 	}, nil
 }
 
-func (pv *PrivateKey) Public() PublicKey {
+func (pv PrivateKey) PublicKey() PublicKey {
 	b := make([]byte, publicKeyLen)
 	copy(b, pv.key[publicKeyLen:])
 
@@ -85,13 +84,13 @@ func (pb PublicKey) Bytes() []byte {
 }
 
 func (pb PublicKey) Address() types.Address {
-	return types.AddressFromBytes(pb.key[publicKeyLen-addressLen:])
+	return types.AddressFromBytes(pb.key[publicKeyLen-types.AddressLen:])
 }
 
 func (s Signature) Bytes() []byte {
 	return s.value
 }
 
-func (s Signature) Verify(key PublicKey, data []byte) bool {
-	return ed25519.Verify(key.key, data, s.value)
+func (s Signature) Verify(pubKey PublicKey, data []byte) bool {
+	return ed25519.Verify(pubKey.key, data, s.value)
 }

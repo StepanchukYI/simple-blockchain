@@ -10,10 +10,6 @@ import (
 	"github.com/StepanchukYI/simple-blockchain/internal/types"
 )
 
-const (
-	privateKeyLen = 64
-)
-
 type PrivateKey struct {
 	key *ecdsa.PrivateKey
 }
@@ -52,9 +48,8 @@ func (pv PrivateKey) Sign(data []byte) (*Signature, error) {
 	}, nil
 }
 
-func (pv PrivateKey) Public() PublicKey {
+func (pv PrivateKey) PublicKey() PublicKey {
 	return elliptic.MarshalCompressed(pv.key.PublicKey, pv.key.PublicKey.X, pv.key.PublicKey.Y)
-
 }
 
 func (pb PublicKey) Bytes() []byte {
@@ -65,12 +60,12 @@ func (pb PublicKey) Address() types.Address {
 	return types.AddressFromBytes(pb[len(pb)-types.AddressLen:])
 }
 
-func (s *Signature) Bytes() []byte {
+func (s Signature) Bytes() []byte {
 	b := append(s.S.Bytes(), s.R.Bytes()...)
 	return b
 }
 
-func (s *Signature) Verify(pubKey PublicKey, data []byte) bool {
+func (s Signature) Verify(pubKey PublicKey, data []byte) bool {
 	x, y := elliptic.UnmarshalCompressed(elliptic.P256(), pubKey)
 	key := &ecdsa.PublicKey{
 		Curve: elliptic.P256(),

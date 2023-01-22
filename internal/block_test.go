@@ -1,88 +1,66 @@
 package internal
 
 import (
-	"bytes"
 	"testing"
 	"time"
 
-	"github.com/StepanchukYI/simple-blockchain/internal/types"
+	"github.com/StepanchukYI/simple-blockchain/helpers"
+	"github.com/StepanchukYI/simple-blockchain/pkg/keypair/edwards"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestHeader_EncodeBinary_DecodeBinary(t *testing.T) {
-	hash, err := types.RandomHash()
-	if err != nil {
-		t.Error(err)
-	}
-
-	h := &Header{
-		Version:   1,
-		PrevBloc:  hash,
-		Timestamp: time.Now().UnixNano(),
-		Height:    2,
-		Nonce:     454324,
-	}
-
-	buf := &bytes.Buffer{}
-	err = h.EncodeBinary(buf)
-	if err != nil {
-		t.Error(err)
-	}
-
-	hDecode := &Header{}
-	assert.Nil(t, hDecode.DecodeBinary(buf))
-	assert.Equal(t, h, hDecode)
-}
-
-func TestBlock_EncodeBinary_DecodeBinary(t *testing.T) {
-	hash, err := types.RandomHash()
-	if err != nil {
-		t.Error(err)
-	}
-
-	h := Header{
-		Version:   1,
-		PrevBloc:  hash,
-		Timestamp: time.Now().UnixNano(),
-		Height:    2,
-		Nonce:     454324,
-	}
-
-	b := &Block{
-		Header:       h,
-		Transactions: nil,
-	}
-
-	buf := &bytes.Buffer{}
-	err = b.EncodeBinary(buf)
-	if err != nil {
-		t.Error(err)
-	}
-
-	bDecode := &Block{}
-	assert.Nil(t, bDecode.DecodeBinary(buf))
-	assert.Equal(t, b, bDecode)
-}
-
-func TestBlock_Hash(t *testing.T) {
-	hash, err := types.RandomHash()
-	if err != nil {
-		t.Error(err)
-	}
-
+func RandomBlock(height uint32) *Block {
 	header := Header{
-		Version:   1,
-		PrevBloc:  hash,
-		Timestamp: time.Now().UnixNano(),
-		Height:    2,
-		Nonce:     768945,
+		Version:       1,
+		PrevBlockHash: helpers.RandomHash(),
+		Height:        height,
+		Timestamp:     time.Now().UnixNano(),
+	}
+	tx := Transaction{
+		Data: []byte("Test Data"),
 	}
 
-	b := &Block{
-		Header:       header,
-		Transactions: nil,
+	return NewBlock(header, []Transaction{tx})
+}
+
+func RandomBlockWithSignature(t *testing.T, height uint32) *Block {
+	privKey, err := edwards.GeneratePrivateKey()
+	assert.Nil(t, err)
+	header := Header{
+		Version:       1,
+		PrevBlockHash: helpers.RandomHash(),
+		Height:        height,
+		Timestamp:     time.Now().UnixNano(),
+	}
+	tx := Transaction{
+		Data: []byte("Test Data"),
 	}
 
-	h := b.Hash()
-	assert.False(t, h.IsZero())
+	block := NewBlock(header, []Transaction{tx})
+
+	err = block.Sign(privKey)
+	assert.Nil(t, err)
+
+	return block
+}
+
+func TestBlock_Sign(t *testing.T) {
+	privKey, err := edwards.GeneratePrivateKey()
+	assert.Nil(t, err)
+	b := RandomBlock(0)
+
+	assert.Nil(t, b.Sign(privKey))
+	assert.NotNil(t, b.Signature)
+
+	assert.True(t, b.Verify())
+
+	otherPrivKey, err := edwards.GeneratePrivateKey()
+	assert.Nil(t, err)
+	b.PublicKey = otherPrivKey.PublicKey()
+
+	assert.False(t, b.Verify())
+
+	b.Height = 100
+
+	assert.False(t, b.Verify())
 }
