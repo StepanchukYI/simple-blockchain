@@ -1,4 +1,4 @@
-package pkg
+package edwards
 
 import (
 	"testing"
@@ -41,7 +41,10 @@ func TestPrivateKey_Sign(t *testing.T) {
 		t.Error(err)
 	}
 
-	signed := privateKey.Sign(msg)
+	signed, err := privateKey.Sign(msg)
+	if err != nil {
+		t.Error(err)
+	}
 	assert.True(t, signed.Verify(publicKey, msg))
 
 	assert.False(t, signed.Verify(publicKey, []byte("not same message to sign")))

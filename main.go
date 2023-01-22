@@ -4,11 +4,11 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/StepanchukYI/simple-blockchain/pkg"
+	"github.com/StepanchukYI/simple-blockchain/pkg/keypair/edwards"
 )
 
 func main() {
-	key, err := pkg.GeneratePrivateKey()
+	key, err := edwards.GeneratePrivateKey()
 	if err != nil {
 		panic(err)
 	}
