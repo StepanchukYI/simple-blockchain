@@ -1,12 +1,7 @@
 package internal
 
 import (
-	"errors"
 	"fmt"
-)
-
-var (
-	BlockNotExist = errors.New("block not exist")
 )
 
 type Blockchain struct {
