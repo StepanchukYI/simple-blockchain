@@ -35,10 +35,11 @@ func (bv BlockValidator) ValidateBlock(block *Block) error {
 
 	hash := BlockHasher{}.Hash(prevHeader)
 	if hash != block.PrevBlockHash {
-
+		return fmt.Errorf("the hash of the previous block (%s) is invalid", block.PrevBlockHash)
 	}
 
-	if !block.Verify() {
+	_, err = block.Verify()
+	if err != nil {
 		return errors.New("block not valid")
 	}
 	return nil

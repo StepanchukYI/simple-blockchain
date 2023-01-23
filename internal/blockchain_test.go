@@ -15,26 +15,68 @@ func TestBlock_Hash(t *testing.T) {
 	assert.True(t, bc.HasBlock(0))
 }
 
-func TestBlockchain_AddBlock(t *testing.T) {
+func TestAddBlock(t *testing.T) {
 	bc := newBlockChainWithGenesis(t)
 
-	for i := 1; i < 1000; i++ {
-		block := RandomBlockWithSignature(t, uint32(i), getPrevBlockHash(t, bc, uint32(i-1)))
-		err := bc.AddBlock(block)
+	lenBlocks := 20
+	for i := 1; i < lenBlocks; i++ {
+		block := RandomBlock(t, uint32(i), getPrevBlockHash(t, bc, uint32(i)))
+		assert.Nil(t, bc.AddBlock(block))
+	}
+
+	assert.Equal(t, bc.Height(), uint32(lenBlocks-1))
+	assert.Equal(t, len(bc.headers), lenBlocks)
+	assert.NotNil(t, bc.AddBlock(RandomBlock(t, 89, types.Hash{})))
+}
+
+func TestNewBlockchain(t *testing.T) {
+	bc := newBlockChainWithGenesis(t)
+	assert.NotNil(t, bc.validator)
+	assert.Equal(t, bc.Height(), uint32(0))
+}
+
+func TestHasBlock(t *testing.T) {
+	bc := newBlockChainWithGenesis(t)
+	assert.True(t, bc.HasBlock(0))
+	assert.False(t, bc.HasBlock(1))
+	assert.False(t, bc.HasBlock(100))
+}
+
+func TestGetBlock(t *testing.T) {
+	bc := newBlockChainWithGenesis(t)
+	lenBlocks := 20
+
+	for i := 1; i < lenBlocks; i++ {
+		block := RandomBlock(t, uint32(i), getPrevBlockHash(t, bc, uint32(i)))
+		assert.Nil(t, bc.AddBlock(block))
+		fetchedBlock, err := bc.GetBlock(block.Height)
 		assert.Nil(t, err)
+		assert.Equal(t, fetchedBlock, block)
+	}
+}
+
+func TestGetHeader(t *testing.T) {
+	bc := newBlockChainWithGenesis(t)
+	lenBlocks := 20
+
+	for i := 1; i < lenBlocks; i++ {
+		block := RandomBlock(t, uint32(i), getPrevBlockHash(t, bc, uint32(i)))
+		assert.Nil(t, bc.AddBlock(block))
 		header, err := bc.GetHeader(block.Height)
 		assert.Nil(t, err)
 		assert.Equal(t, header, block.Header)
 	}
+}
 
-	assert.Equal(t, uint32(999), bc.Height())
-	assert.Equal(t, 1000, bc.len())
+func TestAddBlockToHigh(t *testing.T) {
+	bc := newBlockChainWithGenesis(t)
 
-	assert.NotNil(t, bc.AddBlock(RandomBlockWithSignature(t, 100, types.Hash{})))
+	assert.Nil(t, bc.AddBlock(RandomBlock(t, 1, getPrevBlockHash(t, bc, uint32(1)))))
+	assert.NotNil(t, bc.AddBlock(RandomBlock(t, 3, types.Hash{})))
 }
 
 func newBlockChainWithGenesis(t *testing.T) *Blockchain {
-	bc, err := NewBlockChain(RandomBlock(0, types.Hash{}))
+	bc, err := NewBlockChain(RandomBlock(t, 0, types.Hash{}))
 	assert.Nil(t, err)
 	return bc
 }

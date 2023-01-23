@@ -15,7 +15,7 @@ func TestGeneratePrivateKey(t *testing.T) {
 	assert.Equal(t, len(privateKey.Bytes()), privateKeyLen)
 
 	publicKey := privateKey.PublicKey()
-	assert.Equal(t, len(publicKey.Bytes()), publicKeyLen)
+	assert.Equal(t, len(publicKey), publicKeyLen)
 }
 
 func TestGeneratePrivateKeyFromString(t *testing.T) {

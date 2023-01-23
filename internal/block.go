@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/gob"
+	"errors"
 	"time"
 
 	"github.com/StepanchukYI/simple-blockchain/internal/types"
@@ -37,6 +38,13 @@ type Block struct {
 	hash types.Hash
 }
 
+func NewBlock(h *Header, txx []*Transaction) (*Block, error) {
+	return &Block{
+		Header:       h,
+		Transactions: txx,
+	}, nil
+}
+
 func NewBlockFromPrevHeader(prevHeader *Header, tx []*Transaction) (*Block, error) {
 	dataHash, err := CalculateDataHash(tx)
 	if err != nil {
@@ -54,11 +62,10 @@ func NewBlockFromPrevHeader(prevHeader *Header, tx []*Transaction) (*Block, erro
 	return NewBlock(header, tx)
 }
 
-func NewBlock(h *Header, tx []*Transaction) (*Block, error) {
-	return &Block{
-		Header:       h,
-		Transactions: tx,
-	}, nil
+func (b *Block) AddTransaction(tx *Transaction) {
+	b.Transactions = append(b.Transactions, tx)
+	hash, _ := CalculateDataHash(b.Transactions)
+	b.DataHash = hash
 }
 
 func (b *Block) Sign(privKey edwards.PrivateKey) error {
@@ -73,29 +80,28 @@ func (b *Block) Sign(privKey edwards.PrivateKey) error {
 	return nil
 }
 
-func (b *Block) Verify() bool {
+func (b *Block) Verify() (bool, error) {
 	if b.Signature == nil {
-		return false
+		return false, errors.New("empty signature")
 	}
 
-	if b.Signature.Verify(b.PublicKey, b.Header.Bytes()) {
-
-		return false
+	if !b.Signature.Verify(b.PublicKey, b.Header.Bytes()) {
+		return false, errors.New("signature not verified")
 	}
 
 	for _, tx := range b.Transactions {
 		if !tx.Verify() {
-			return false
+			return false, errors.New("transactions not verified")
 		}
 	}
 
 	dataHash, _ := CalculateDataHash(b.Transactions)
 
 	if dataHash != b.DataHash {
-		return false
+		return false, errors.New("data not verified")
 	}
 
-	return b.Signature.Verify(b.PublicKey, b.Header.Bytes())
+	return true, nil
 }
 
 func (b *Block) Decode(dec Decoder[*Block]) error {

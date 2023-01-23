@@ -51,11 +51,12 @@ func (bc *Blockchain) HasBlock(height uint32) bool {
 	return height <= bc.Height()
 }
 
-func (bc *Blockchain) GetBlock(height uint32) (Block, error) {
-	if !bc.HasBlock(height) {
-		return Block{}, BlockNotExist
+func (bc *Blockchain) GetBlock(height uint32) (*Block, error) {
+	if height > bc.Height() {
+		return nil, fmt.Errorf("given height (%d) too high", height)
 	}
-	return bc.store.Get(height)
+
+	return bc.blocks[height], nil
 }
 
 func (bc *Blockchain) AddBlock(b *Block) error {
@@ -67,5 +68,6 @@ func (bc *Blockchain) AddBlock(b *Block) error {
 
 func (bc *Blockchain) addBlockWithoutValidation(b *Block) error {
 	bc.headers = append(bc.headers, b.Header)
+	bc.blocks = append(bc.blocks, b)
 	return bc.store.Put(b)
 }

@@ -20,12 +20,10 @@ type PrivateKey struct {
 	key ed25519.PrivateKey
 }
 
-type PublicKey struct {
-	key ed25519.PublicKey
-}
+type PublicKey ed25519.PublicKey
 
 type Signature struct {
-	value []byte
+	Value []byte
 }
 
 func GeneratePrivateKeyFromString(s string) (PrivateKey, error) {
@@ -66,7 +64,7 @@ func (pv PrivateKey) Bytes() []byte {
 
 func (pv PrivateKey) Sign(data []byte) (*Signature, error) {
 	return &Signature{
-		value: ed25519.Sign(pv.key, data),
+		Value: ed25519.Sign(pv.key, data),
 	}, nil
 }
 
@@ -74,23 +72,17 @@ func (pv PrivateKey) PublicKey() PublicKey {
 	b := make([]byte, publicKeyLen)
 	copy(b, pv.key[publicKeyLen:])
 
-	return PublicKey{
-		key: b,
-	}
-}
-
-func (pb PublicKey) Bytes() []byte {
-	return pb.key
+	return b
 }
 
 func (pb PublicKey) Address() types.Address {
-	return types.AddressFromBytes(pb.key[publicKeyLen-types.AddressLen:])
+	return types.AddressFromBytes(pb[publicKeyLen-types.AddressLen:])
 }
 
 func (s Signature) Bytes() []byte {
-	return s.value
+	return s.Value
 }
 
 func (s Signature) Verify(pubKey PublicKey, data []byte) bool {
-	return ed25519.Verify(pubKey.key, data, s.value)
+	return ed25519.Verify(ed25519.PublicKey(pubKey), data, s.Value)
 }
