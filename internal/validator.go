@@ -1,6 +1,9 @@
 package internal
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 type Validator interface {
 	ValidateBlock(block *Block) error
@@ -18,8 +21,23 @@ func NewBlockValidator(bc *Blockchain) *BlockValidator {
 
 func (bv BlockValidator) ValidateBlock(block *Block) error {
 	if bv.bc.HasBlock(block.Height) {
-		return errors.New("block already exist")
+		return fmt.Errorf("block already exist with hash (%s)", block.Hash(BlockHasher{}))
 	}
+
+	if block.Height != bv.bc.Height()+1 {
+		return fmt.Errorf("block to high with hash (%s)", block.Hash(BlockHasher{}))
+	}
+
+	prevHeader, err := bv.bc.GetHeader(block.Height - 1)
+	if err != nil {
+		return err
+	}
+
+	hash := BlockHasher{}.Hash(prevHeader)
+	if hash != block.PrevBlockHash {
+
+	}
+
 	if !block.Verify() {
 		return errors.New("block not valid")
 	}

@@ -1,14 +1,24 @@
 package internal
 
+import (
+	"errors"
+	"fmt"
+)
+
+var (
+	BlockNotExist = errors.New("block not exist")
+)
+
 type Blockchain struct {
 	store     Storage
-	headers   []Header
+	headers   []*Header
+	blocks    []*Block
 	validator Validator
 }
 
 func NewBlockChain(block *Block) (*Blockchain, error) {
 	bc := &Blockchain{
-		headers: []Header{},
+		headers: []*Header{},
 		store:   NewMemorystore(),
 	}
 	bc.SetValidator(NewBlockValidator(bc))
@@ -29,8 +39,23 @@ func (bc *Blockchain) len() int {
 	return len(bc.headers)
 }
 
+func (bc *Blockchain) GetHeader(height uint32) (*Header, error) {
+	if height > bc.Height() {
+		return nil, fmt.Errorf("given height (%d) too high", height)
+	}
+
+	return bc.headers[height], nil
+}
+
 func (bc *Blockchain) HasBlock(height uint32) bool {
 	return height <= bc.Height()
+}
+
+func (bc *Blockchain) GetBlock(height uint32) (Block, error) {
+	if !bc.HasBlock(height) {
+		return Block{}, BlockNotExist
+	}
+	return bc.store.Get(height)
 }
 
 func (bc *Blockchain) AddBlock(b *Block) error {

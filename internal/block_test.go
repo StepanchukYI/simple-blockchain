@@ -4,39 +4,41 @@ import (
 	"testing"
 	"time"
 
-	"github.com/StepanchukYI/simple-blockchain/helpers"
+	"github.com/StepanchukYI/simple-blockchain/internal/types"
 	"github.com/StepanchukYI/simple-blockchain/pkg/keypair/edwards"
 	"github.com/stretchr/testify/assert"
 )
 
-func RandomBlock(height uint32) *Block {
-	header := Header{
+func RandomBlock(height uint32, prevBlockHash types.Hash) *Block {
+	header := &Header{
 		Version:       1,
-		PrevBlockHash: helpers.RandomHash(),
+		PrevBlockHash: prevBlockHash,
 		Height:        height,
 		Timestamp:     time.Now().UnixNano(),
 	}
-	tx := Transaction{
+	tx := &Transaction{
 		Data: []byte("Test Data"),
 	}
 
-	return NewBlock(header, []Transaction{tx})
+	b, _ := NewBlock(header, []*Transaction{tx})
+	return b
 }
 
-func RandomBlockWithSignature(t *testing.T, height uint32) *Block {
+func RandomBlockWithSignature(t *testing.T, height uint32, prevBlockHash types.Hash) *Block {
 	privKey, err := edwards.GeneratePrivateKey()
 	assert.Nil(t, err)
-	header := Header{
+	header := &Header{
 		Version:       1,
-		PrevBlockHash: helpers.RandomHash(),
+		PrevBlockHash: prevBlockHash,
 		Height:        height,
 		Timestamp:     time.Now().UnixNano(),
 	}
-	tx := Transaction{
+	tx := &Transaction{
 		Data: []byte("Test Data"),
 	}
 
-	block := NewBlock(header, []Transaction{tx})
+	block, err := NewBlock(header, []*Transaction{tx})
+	assert.Nil(t, err)
 
 	err = block.Sign(privKey)
 	assert.Nil(t, err)
@@ -47,7 +49,7 @@ func RandomBlockWithSignature(t *testing.T, height uint32) *Block {
 func TestBlock_Sign(t *testing.T) {
 	privKey, err := edwards.GeneratePrivateKey()
 	assert.Nil(t, err)
-	b := RandomBlock(0)
+	b := RandomBlock(0, types.Hash{})
 
 	assert.Nil(t, b.Sign(privKey))
 	assert.NotNil(t, b.Signature)
