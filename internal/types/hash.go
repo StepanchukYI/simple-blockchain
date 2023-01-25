@@ -1,8 +1,10 @@
 package types
 
 import (
+	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"io"
 )
 
 const (
@@ -51,4 +53,19 @@ func HashFromBytes(b []byte) (Hash, error) {
 	}
 
 	return value, nil
+}
+
+func RandomHash() Hash {
+	b := make([]byte, HashLen)
+
+	_, err := io.ReadFull(rand.Reader, b)
+	if err != nil {
+		panic(err)
+	}
+	h, err := HashFromBytes(b)
+	if err != nil {
+		panic(err)
+	}
+
+	return h
 }

@@ -33,3 +33,9 @@ func TestHashFromBytes(t *testing.T) {
 	assert.Equal(t, len(h.Bytes()), HashLen)
 	assert.Equal(t, len(h.ToSlice()), HashLen)
 }
+
+func TestRandomHash(t *testing.T) {
+	hash := RandomHash()
+
+	assert.Equal(t, len(hash), HashLen)
+}

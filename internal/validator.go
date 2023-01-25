@@ -5,6 +5,10 @@ import (
 	"fmt"
 )
 
+var (
+	ErrBlockAlreadyExist = errors.New("block already exist")
+)
+
 type Validator interface {
 	ValidateBlock(block *Block) error
 }
@@ -21,7 +25,7 @@ func NewBlockValidator(bc *Blockchain) *BlockValidator {
 
 func (bv BlockValidator) ValidateBlock(block *Block) error {
 	if bv.bc.HasBlock(block.Height) {
-		return fmt.Errorf("block already exist with hash (%s)", block.Hash(BlockHasher{}))
+		return ErrBlockAlreadyExist
 	}
 
 	if block.Height != bv.bc.Height()+1 {
