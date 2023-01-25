@@ -48,7 +48,7 @@ type Server struct {
 func NewServerOpts(cfg Config,
 	id string,
 	ts []Transport,
-	service service.ServiceInterface,
+	service *service.Service,
 ) ServerOpts {
 	opts := ServerOpts{
 		ID:            id,
